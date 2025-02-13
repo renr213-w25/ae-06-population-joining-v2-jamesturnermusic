@@ -1,6 +1,13 @@
----
-title: "AE 06: Joining country populations with continents"
----
+-   <div>
+
+    ---
+    title: "AE 06: Joining country populations with continents"
+    author: "James Turner"
+    date: today
+    format: html
+    ---
+
+    </div>
 
 ## Goal
 
@@ -34,7 +41,7 @@ Let's take a look at the data.
 ```{r}
 #| label: view-population-data
 
-population
+view(population)
 ```
 
 ### Continents
@@ -53,7 +60,7 @@ Let's take a look at the data.
 ```{r}
 #| label: view-continents-data
 
-continents
+view(continents)
 ```
 
 ## Exercises
@@ -62,7 +69,7 @@ continents
 
     -   Which variable(s) will we use to join the `population` and `continents` data frames?
 
-    Add response here.
+    **Answer**: The only variable that both data frames have in common is the country names (Called "entity" in the continents dataframe and "country" in the population dataframe. So those would be used to connect the two together. Since their lists of countries are not identical, I assume we will need to consider which one we are keeping all of the data from and which we will lose some data from (or perhaps both are connected such that non-duplicate countries get a row with the values from the other data frame set to NA? I guess we will see.
 
     -   We want to create a new data frame that keeps all rows and columns from `population` and brings in the corresponding information from `continents`. Which join function should we use?
 
