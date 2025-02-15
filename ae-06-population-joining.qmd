@@ -1,6 +1,21 @@
+```         
+```
+
 ---
 title: "AE 06: Joining country populations with continents"
+author: "James Turner"
+date: today
+format: html
 ---
+
+```         
+```
+
+**James Turner**
+
+February 13, 2024
+
+(Not sure why my YAML block broke or how to fix it)
 
 ## Goal
 
@@ -34,7 +49,7 @@ Let's take a look at the data.
 ```{r}
 #| label: view-population-data
 
-population
+view(population)
 ```
 
 ### Continents
@@ -53,7 +68,7 @@ Let's take a look at the data.
 ```{r}
 #| label: view-continents-data
 
-continents
+view(continents)
 ```
 
 ## Exercises
@@ -62,7 +77,7 @@ continents
 
     -   Which variable(s) will we use to join the `population` and `continents` data frames?
 
-    Add response here.
+    **Answer**: The only variable that both data frames have in common is the country names (Called "entity" in the continents dataframe and "country" in the population dataframe. So those would be used to connect the two together. Since their lists of countries are not identical, I assume we will need to consider which one we are keeping all of the data from and which we will lose some data from (or perhaps both are connected such that non-duplicate countries get a row with the values from the other data frame set to NA? I guess we will see.
 
     -   We want to create a new data frame that keeps all rows and columns from `population` and brings in the corresponding information from `continents`. Which join function should we use?
 
@@ -73,7 +88,8 @@ continents
 ```{r}
 #| label: join-population-continents
 
-# add code here
+population_continents <- population |>
+  left_join(continents, join_by(country == entity))
 ```
 
 -   **Demo:** Take a look at the newly created `population_continent` data frame. There are some countries that were not in `continents`. First, identify which countries these are (they will have `NA` values for `continent`).
@@ -81,7 +97,12 @@ continents
 ```{r}
 #| label: data-inspect
 
-# add code here
+rows_with_na <- population_continents[apply(
+  population_continents, 
+  1, 
+  function(x) any(is.na(x))
+  ), ]
+rows_with_na
 ```
 
 -   **Demo:** All of these countries are actually in the `continents` data frame, but under different names. So, let's clean that data first by updating the country names in the `population` data frame in a way they will match the `continents` data frame, and then joining them, using a `case_when()` statement in `mutate()`. At the end, check that all countries now have continent information.
@@ -89,19 +110,47 @@ continents
 ```{r}
 #| label: data-clean
 
-# add code here
+new_continent_names <- population |>
+  mutate(country = case_when(
+    country == "Congo, Dem. Rep." ~ "Democratic Republic of Congo",
+    country == "Congo, Rep." ~ "Congo",
+    country == "Hong Kong SAR, China" ~ "Hong Kong",
+    country == "Korea, Dem. People's Rep." ~ "North Korea",
+    country == "Korea, Rep." ~ "Korea (former)",
+    country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+    TRUE ~ country
+    ))
+
+population_continents_2 <- new_continent_names |>
+  left_join(continents, join_by(country == entity))
+
+rows_with_na <- population_continents_2[apply(
+  population_continents_2, 
+  1, 
+  function(x) any(is.na(x))
+  ), ]
+print(rows_with_na)
+
+print(population_continents_2)
 ```
 
 -   **Think out loud:** Which continent do you think has the highest population? Which do you think has the second highest? The lowest?
 
-Add your response here.
+My (well informed) guess is that Asia wil have the highest population, while Africa would be the second most and Oceania would have the lowest.
 
 -   **Demo:** Create a new data frame called `population_summary` that contains a row for each continent and a column for the total population for that continent, in descending order of population. Note that the function for calculating totals in R is `sum()`.
 
 ```{r}
 #| label: population-continents-sum
 
-# add code here
+population_continents_sum <- population_continents_2 |>
+  group_by(continent) |>
+  summarize(
+    continent_population = sum(population)
+  ) |>
+  arrange(desc(continent_population))
+
+population_continents_sum
 ```
 
 -   **Your turn:** Make a bar plot with total population on the y-axis and continent on the x-axis, where the height of each bar represents the total population in that continent.
@@ -109,7 +158,16 @@ Add your response here.
 ```{r}
 #| label: population-summary-bar
 
-# add code here
+ggplot(population_continents_sum,
+       aes(x = continent, y = continent_population, fill = continent)
+       ) + 
+  geom_col() +
+  labs(
+    y = "Total Population of Continent",
+    x = "Continent",
+    title = "Total Population by Continent",
+    fill = "Continent"
+  )
 ```
 
 -   **Your turn:** Recreate the following plot, which is commonly referred to as a **lollipop plot**. Hint: Start with the points, then try adding the `segment`s, then add axis labels and `caption`, and finally, as a stretch goal, update the x scale (which will require a function we haven't introduced in lectures or labs yet!).
@@ -120,9 +178,28 @@ Add your response here.
 #| label: population-summary-lollipop
 #| fig-asp: 0.4
 
-# add code here
+ggplot(population_continents_sum,
+         aes(x = continent_population, y = continent)
+       ) + 
+  geom_point() +
+  geom_segment(aes(
+    x = 0,
+    y = continent,
+    xend = continent_population,
+    yend = continent
+  )) +
+  theme_minimal() +
+  labs(
+    y = "Continent",
+    x = "Total Population",
+    title = "World Population",
+    subtitle = "As of 2022",
+    caption = "Data sources: The World Bank and Our World in Data"
+  ) +
+  scale_x_continuous(labels = unit_format(unit = "bil", scale = 1e-6))
+
 ```
 
 -   **Think out loud:** What additional improvements would you like to make to this plot.
 
-Add your response here.
+I could potentially organize the continents into alphabetical order, colour each continent bar and dot, create a label on the plot at the end of each dot that indicates the true value of the population for each continent so that more than just the general estimated number based off the x-axis labels is readily available.
